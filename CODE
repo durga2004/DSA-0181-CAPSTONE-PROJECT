@@ -1,0 +1,273 @@
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <iomanip>
+#include <sstream>
+#include <limits>
+using namespace std;
+
+// Utility function to split strings
+vector<string> splitString(const string &data, char delimiter) {
+    vector<string> tokens;
+    stringstream ss(data);
+    string token;
+    while (getline(ss, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
+// Base class for file handling
+class FileHandler {
+protected:
+    void writeToFile(const string &filename, const string &data) {
+        ofstream outFile(filename, ios::app);
+        if (!outFile) {
+            cerr << "Error opening file for writing: " << filename << endl;
+            return;
+        }
+        outFile << data << endl;
+        outFile.close();
+    }
+
+    vector<string> readFromFile(const string &filename) {
+        vector<string> lines;
+        ifstream inFile(filename);
+        if (!inFile) {
+            cerr << "Error opening file for reading: " << filename << endl;
+            return lines;
+        }
+        string line;
+        while (getline(inFile, line)) {
+            lines.push_back(line);
+        }
+        inFile.close();
+        return lines;
+    }
+};
+
+// Student Class
+class Student : public FileHandler {
+    int id;
+    string name, address, phone;
+
+public:
+    void registerStudent() {
+        cout << "Enter ID: ";
+        cin >> id;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "Enter Name: ";
+        getline(cin, name);
+        cout << "Enter Address: ";
+        getline(cin, address);
+        cout << "Enter Phone: ";
+        cin >> phone;
+
+        writeToFile("students.txt", to_string(id) + "," + name + "," + address + "," + phone);
+        cout << "Student Registered Successfully!" << endl;
+    }
+
+    void displayStudents() {
+        vector<string> students = readFromFile("students.txt");
+        if (students.empty()) {
+            cout << "No students registered yet!" << endl;
+            return;
+        }
+        cout << "Student Records:" << endl;
+        for (const string &student : students) {
+            vector<string> fields = splitString(student, ',');
+            if (fields.size() == 4) {
+                cout << "ID: " << fields[0] << ", Name: " << fields[1] << ", Address: " << fields[2] << ", Phone: " << fields[3] << endl;
+            } else {
+                cout << student << endl;
+            }
+        }
+    }
+};
+
+// Teacher Class
+class Teacher : public FileHandler {
+    int id;
+    string name, subject, qualification;
+    float experience, salary;
+
+public:
+    void addTeacher() {
+        cout << "Enter ID: ";
+        cin >> id;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "Enter Name: ";
+        getline(cin, name);
+        cout << "Enter Subject: ";
+        getline(cin, subject);
+        cout << "Enter Qualification: ";
+        getline(cin, qualification);
+        cout << "Enter Experience (years): ";
+        cin >> experience;
+        cout << "Enter Salary: ";
+        cin >> salary;
+
+        writeToFile("teachers.txt", to_string(id) + "," + name + "," + subject + "," + qualification + "," + to_string(experience) + "," + to_string(salary));
+        cout << "Teacher Added Successfully!" << endl;
+    }
+
+    void displayTeachers() {
+        vector<string> teachers = readFromFile("teachers.txt");
+        if (teachers.empty()) {
+            cout << "No teachers added yet!" << endl;
+            return;
+        }
+        cout << "Teacher Records:" << endl;
+        for (const string &teacher : teachers) {
+            vector<string> fields = splitString(teacher, ',');
+            if (fields.size() == 6) {
+                cout << "ID: " << fields[0] << ", Name: " << fields[1] << ", Subject: " << fields[2] << ", Qualification: " << fields[3]
+                     << ", Experience: " << fields[4] << " years, Salary: " << fields[5] << endl;
+            } else {
+                cout << teacher << endl;
+            }
+        }
+    }
+};
+
+// Class Schedule Class
+class ClassSchedule : public FileHandler {
+    string className, subject, teacherID, time;
+
+public:
+    void addSchedule() {
+        cout << "Enter Class Name: ";
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        getline(cin, className);
+        cout << "Enter Subject: ";
+        getline(cin, subject);
+        cout << "Enter Teacher ID: ";
+        getline(cin, teacherID);
+        cout << "Enter Time (e.g., 9:00 AM): ";
+        getline(cin, time);
+
+        writeToFile("schedule.txt", className + "," + subject + "," + teacherID + "," + time);
+        cout << "Class Schedule Added Successfully!" << endl;
+    }
+
+    void displaySchedules() {
+        vector<string> schedules = readFromFile("schedule.txt");
+        if (schedules.empty()) {
+            cout << "No schedules added yet!" << endl;
+            return;
+        }
+        cout << "Class Schedules:" << endl;
+        for (const string &schedule : schedules) {
+            vector<string> fields = splitString(schedule, ',');
+            if (fields.size() == 4) {
+                cout << "Class: " << fields[0] << ", Subject: " << fields[1] << ", Teacher ID: " << fields[2] << ", Time: " << fields[3] << endl;
+            } else {
+                cout << schedule << endl;
+            }
+        }
+    }
+};
+
+// Attendance Class
+class Attendance : public FileHandler {
+    string date, studentID;
+    bool isPresent;
+
+public:
+    void markAttendance() {
+        cout << "Enter Date (YYYY-MM-DD): ";
+        cin >> date;
+        cout << "Enter Student ID: ";
+        cin >> studentID;
+        while (true) {
+            cout << "Is Present? (1 for Yes, 0 for No): ";
+            cin >> isPresent;
+            if (cin.fail() || (isPresent != 0 && isPresent != 1)) {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid input! Please enter 1 for Yes or 0 for No." << endl;
+            } else {
+                break;
+            }
+        }
+
+        writeToFile("attendance.txt", date + "," + studentID + "," + (isPresent ? "Present" : "Absent"));
+        cout << "Attendance Marked Successfully!" << endl;
+    }
+
+    void viewAttendance() {
+        vector<string> attendance = readFromFile("attendance.txt");
+        if (attendance.empty()) {
+            cout << "No attendance records yet!" << endl;
+            return;
+        }
+        cout << "Attendance Records:" << endl;
+        for (const string &record : attendance) {
+            vector<string> fields = splitString(record, ',');
+            if (fields.size() == 3) {
+                cout << "Date: " << fields[0] << ", Student ID: " << fields[1] << ", Status: " << fields[2] << endl;
+            } else {
+                cout << record << endl;
+            }
+        }
+    }
+};
+
+// Main Menu
+int main() {
+    Student student;
+    Teacher teacher;
+    ClassSchedule schedule;
+    Attendance attendance;
+    int choice;
+
+    do {
+        cout << "\n--- School Management System ---\n";
+        cout << "1. Register Student\n";
+        cout << "2. Display Students\n";
+        cout << "3. Add Teacher\n";
+        cout << "4. Display Teachers\n";
+        cout << "5. Add Class Schedule\n";
+        cout << "6. Display Class Schedules\n";
+        cout << "7. Mark Attendance\n";
+        cout << "8. View Attendance\n";
+        cout << "0. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+        case 1:
+            student.registerStudent();
+            break;
+        case 2:
+            student.displayStudents();
+            break;
+        case 3:
+            teacher.addTeacher();
+            break;
+        case 4:
+            teacher.displayTeachers();
+            break;
+        case 5:
+            schedule.addSchedule();
+            break;
+        case 6:
+            schedule.displaySchedules();
+            break;
+        case 7:
+            attendance.markAttendance();
+            break;
+        case 8:
+            attendance.viewAttendance();
+            break;
+        case 0:
+            cout << "Exiting..." << endl;
+            break;
+        default:
+            cout << "Invalid choice!" << endl;
+        }
+    } while (choice != 0);
+
+    return 0;
+}
